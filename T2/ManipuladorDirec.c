@@ -276,28 +276,3 @@ D_Ret acessdirectory(char *pathname, char *path)
     printf("Number of files = %d\n",count);
     return 0;
 }
-
-
-int opendirec(char* pathname, char* npath)
-{
-    DIR *dir;
-    int count,i;
-    struct dirent *ent;
-    struct direct **files;
-    struct stat status;
-    int filer = 0;
-    int file_select();
-    char s[3] = "/";
-    if(npath[0] != '\0')
-    {
-        strcat(pathname,s);
-        strcat(pathname,npath);
-    }
-    count = scandir( pathname, &files, file_select, alphasort);
-    if (!(dir = opendir(pathname)))
-    {
-        return 0;
-    }
-    printf("Number of files = %d\n",count);
-    return 0;
-}
