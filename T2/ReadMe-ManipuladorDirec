@@ -1,0 +1,10 @@
+1) accessdirectory:
+    -Nao sabe voltar no diretorio
+    -Entra em qlqr coisa
+    
+2) deletedirectory:
+    -So sabe deletar diretorios na pasta principal
+    
+    
+3) listdirectory / checkrightpath / uma outra aii
+    -Funcao scandir alerta varios warnings
