@@ -180,6 +180,7 @@ int get_decision(void)
 {
     int cmp;
     char s[100];
+    printf("Options: CREATE - DELETE - LIST - ACESS\n");
     printf("What you wanna do bro?: ");
     scanf(" %s", s);
     cmp = strcmp(s,"CREATE");
