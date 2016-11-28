@@ -22,6 +22,7 @@ typedef enum dir_returns
     D_NotDiretorio = 5,
 }D_Ret;
 
+
 int remove_directory(const char *path);
 int file_select(struct direct *entry);
 D_Ret liststuff(char *path);
@@ -30,81 +31,84 @@ D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len);
 D_Ret deletedirectoy(char *path, int path_len, char* dirname, int dir_len);
 D_Ret acessdirectory(char *pathname, char *path);
 
-
 int get_decision(void);
-
 
 int main(void)
 {
-    char pathname[200];
-    int a = 0;
-    int decision;
-    if (getcwd(pathname,200) == NULL )
-    {
-        printf("Error getting path\n");
-         exit(0);
-    }
-    while(1)
-    {
-        decision = get_decision();
-        printf("Executing decision under <<%s>>\n", pathname);
-        if(decision == 1)
-        {
-            char new_dir[100];
-            printf("Name ya new directory: ");
-            scanf(" %s", new_dir);
-            createdirectory(pathname,0,new_dir,strlen(new_dir));
-        }
-        else if(decision == 2)
-        {
-            char dir2del[100];
-            printf("Name whatya wanna delete: ");
-            scanf(" %s", dir2del);
-            deletedirectoy(pathname,0,dir2del,strlen(dir2del));
-        }
-        else if(decision == 3)
-        {
-            liststuff(pathname);
-        }
-        else if(decision == 4)
-        {
-            char folder[100];
-            printf("Where ya wanna go champ?: ");
-            scanf(" %s", folder);
-            acessdirectory(pathname, folder);
-        }
-        printf("\n--------------\n\n");
-    }
-    return 0;
+	char root_path[200];
+	char pathname[200];
+	int a = 0;
+	int decision;
+	if (getcwd(pathname,200) == NULL )
+	{
+		printf("Error getting path\n");
+		exit(0);
+	}
+	while(1)
+	{
+		decision = get_decision();
+		if (getcwd(pathname,200) == NULL )
+		{
+			printf("Error getting path\n");
+			exit(0);
+		}
+		printf("Executing decision under <<%s>>\n", pathname);
+		if(decision == 1)
+		{
+		    char new_dir[100];
+		    printf("Name ya new directory: ");
+		    scanf(" %s", new_dir);
+		    createdirectory(pathname,strlen(pathname),new_dir,strlen(new_dir));
+		}
+		else if(decision == 2)
+		{
+			char dir2del[100];
+			printf("Name whatya wanna delete: ");
+			scanf(" %s",dir2del);
+			printf("Pathname: %s\nDir2Del: %s\n", pathname, dir2del);
+			deletedirectoy(pathname,strlen(pathname),dir2del,strlen(dir2del));
+		}
+		else if(decision == 3)
+		{
+			liststuff(pathname);
+		}
+		else if(decision == 4)
+		{
+			char folder[100];
+			printf("Where ya wanna go champ?: ");
+			scanf(" %s", folder);
+			sprintf(pathname,"%s/%s", pathname,folder);
+			if(chdir(pathname) == -1)
+			{
+				printf("Well... Fuck\n");
+				exit(0);
+			}
+			//acessdirectory(pathname, folder);
+		}
+		printf("\n--------------\n\n");
+	}
+	return 0;
 }
 
 D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len)
 {
-    int status;
-    char pathname[200];
-    char s[2] = "/";
-    strcpy(pathname,path);
-    strcat(pathname,s);
-    strcat(pathname,dirname);
-    status = mkdir(pathname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if(status==0)
-    {
-        return D_OK;
-    }
-    else
-    {
-        return D_AcessoNegado;
-    }
+	int status;
+	char pathname[200];
+	sprintf(pathname, "%s/%s",path,dirname);
+	status = mkdir(pathname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	if(status==0)
+	{
+		return D_OK;
+	}
+	else
+	{
+		return D_AcessoNegado;
+	}
 }
 
 D_Ret deletedirectoy(char *path, int path_len, char* dirname, int dir_len)
 {
     int status;
-    if(checkpathright(path,dirname) != D_OK)
-    {
-        return D_DirecNaoEncontrado;
-    }
-    status = rmdir(dirname);
     remove_directory(dirname);
     printf("%s was deleted!!\n", dirname);
     if(status==0)
@@ -180,7 +184,7 @@ int get_decision(void)
 {
     int cmp;
     char s[100];
-    printf("Options: CREATE - DELETE - LIST - ACESS\n");
+    printf("Options: CREATE - DELETE - LIST - ACCESS\n");
     printf("What you wanna do bro?: ");
     scanf(" %s", s);
     cmp = strcmp(s,"CREATE");
@@ -189,7 +193,7 @@ int get_decision(void)
     if(cmp == 0) return 2;
     cmp = strcmp(s,"LIST");
     if(cmp == 0) return 3;
-    cmp = strcmp(s,"ACESS");
+    cmp = strcmp(s,"ACCESS");
     if(cmp == 0) return 4;
     return 0;
 }
@@ -273,6 +277,5 @@ D_Ret acessdirectory(char *pathname, char *path)
     {
         return 0;
     }
-    printf("Number of files = %d\n",count);
     return 0;
 }
