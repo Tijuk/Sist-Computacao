@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     if (n < 0)
       error("ERROR in recvfrom");
 
-    parse_buff(buf, &cmd, name);//Esse fucking parser tira da string qualquer coisa depois do primeiro " ". A mensagem do cliente então deve ser escrita sem espacos, tudo em sequencia, como no enunciado.
+    //parse_buff(buf, &cmd, name);//Esse fucking parser tira da string qualquer coisa depois do primeiro " ". A mensagem do cliente então deve ser escrita sem espacos, tudo em sequencia, como no enunciado.
 
 /*
 É nessa area do codigo que vamos mexer no servidor, e onde devemos chamar 

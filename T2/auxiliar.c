@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/xattr.h>
+
 extern int alphasort();
 int clienteID;
 
@@ -60,7 +62,7 @@ void get_args(char *s, Args *ar);
 int read_code(char *s, Info *a, Args *ar);
 void reader(int mode, Args *ar, Info *a);
 void viewer(int mode, Info *a);
-void teste(Info *a, Args *ar);
+
 /*---------------------*/
 
 /*FUNCOES DE MANIPULACAO DE DIRETORIOS*/
@@ -93,41 +95,59 @@ char* removeslash(char *s)
 	}
 	return ret;
 }
-
+/*Criar Diretorio*/
 D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len)
 {
 	int status;
 	char *dirn;
 	char *path2;
 	char *oldpath;
+	FILE *fp;
 	
 	struct stat buffer;
 	
 	oldpath = (char*)malloc(200*sizeof(char));
+	//Salvar o path origem
 	getcwd(oldpath,200*sizeof(char));
 
 	printf("Path do diretorio que queremos adicionar %s\n",path);
-	
-	dirn = dirname;
+
+	//Entrar no diretorio descrito no path
 	chdir(path);
 
+	//Gravar o path atual do diretorio
 	path2 = (char*)malloc(200*sizeof(char));
-
 	getcwd(path2,200*sizeof(char));
-	//printf("Teste path corrente %s\n",path2);
-		
-	printf("Creating: %s at %s\n",dirn,path2);
-	status = mkdir(dirn,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	
-	stat(dirn,buffer);	
-	buffer.uid_t = 10;
+	printf("Creating: %s at %s\n",dirname,path2);
+	//Criar o diretorio	
+	status = mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	//Gravar no diretorio criado o id do cliente
+	char d1,codtemp1 = 0x1; //client
+	char d2,codtemp2 = 0x2; //permissao
 
-	printf("Valor do cliente dono do diretorio %s: %d",dirn		
+	int ret1,ret2,ret3,ret4;
+	ret1 = setxattr(dirname,"user.client",&codtemp1,1,0);
+	ret3 = setxattr(dirname,"user.permissao",&codtemp2,1,0);
 
-	printf("Path do diretorio que queremos voltar %s\n",oldpath);
+	if(ret1 < 0)
+		printf("erro1\n");
+	if(ret3 < 0)
+		printf("erro2\n");
+
+	ret2=getxattr(dirname,"user.client",&d1,1);
+	ret4=getxattr(dirname,"user.permissao",&d2,1);
+
+	if(ret4 < 0)
+		printf("erro3\n"); 	
+	if(ret2 < 0)
+		printf("erro4\n");
+
+	printf("Client id:%d\n",d1);
+	printf("Permissao:%d\n",d2);
+	//Voltar pro diretorio de origem
 	chdir(oldpath);
 
-		
 
 	if(status==0)
 	{
@@ -139,7 +159,7 @@ D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len)
 	}	
 
 }
-
+/*Deletar Diretorio*/
 D_Ret deletedirectory(char *path, int path_len, char* dirname, int dir_len)
 {
 	int i;
@@ -204,7 +224,7 @@ void get_command(Info *a, char * lpath){
 		liststuff(lpath);
 	}
 }
-
+/*Lista Diretorio*/
 D_Ret liststuff(char *pathname)
 {
     int count,i;
@@ -269,6 +289,7 @@ void get_decision(Info *a,char *cmdClient)
 	read_code(cmdClient,a,ar);
 }
 
+/*Remover diretorio*/
 int remove_directory(const char *path)
 {
 	DIR *d = opendir(path);
@@ -494,31 +515,4 @@ char* scpy(char *s2)
 	s1 = (char*)malloc(n * sizeof(char));
 	strcpy(s1,s2);
 	return s1;
-}
-
-void teste(Info *a, Args *ar)
-{
-	FILE *arq;
-	int i,tot;
-	char al;
-	char s[200];
-	arq = fopen("ent","r");
-	if(arq == NULL)
-	{
-		printf("Erro na abertura do arquivo\n");
-		exit(0);
-	}
-	while(1)
-	{
-		fscanf(arq, "%s", s);
-		if(strcmp(s,"ENDFILE")==0)
-		{
-			break;
-		}
-		printf("%s\n",s);
-		get_args(s,ar);
-		read_code(s,a,ar);
-		exibe_code(a);
-	}
-	fclose(arq);
 }
