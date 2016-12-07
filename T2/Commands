@@ -10,48 +10,31 @@
 		:: Delete Directory with <dirname> as it's name, and the files within it
 		-- DR-REQ
 	-opendir < path(string) >
-		:: Make < path > the current folder
+		:: Change current directory to < path >
 		:: if < path > == ..  will make the folder acess it's father-folder, if there's one.
 	-lsall < NULL >
-		:: List files at the current folder.
-		-- DL-REQ
-	-lsdir < NULL >
 		:: show the name of all directories/sub-directories/files from the current folder
 		-- DL-REP
 
 
 		-Comandos de Arquivos
+	- rdfile < file (string) > , < nbytes(int) > , < offset(int) >
+		:: read nrbytes from file, from the offset position
+		-- RD-REQ
 
-	- rdnb < file (string) > < offset(int) >
-		:: read nrbytes from file, from the offset position, filling the payload
-		-- 
-	- fpl < content (string) >
-		:: fill the content on payload
-		--
-
-	- mkfl < filename (string) >
-		:: Make file with < filename > as it's name, at the current folder
+	- mkfile < filename (string) > , < filesize (int) >
+		:: Create file named < filename > with sizeof < size > bytes, at the current folder
 		-- WR-REP
 
-	- wrfile < filename(string) > < content(string) > < offset (int) >
+	- wrfile < filename(string) > , < content(string) > , < nbytes (int) > , < offset (int) >
 		:: Write < content > from the < offset > position at the file <filename>
 		-- WR-REQ
 
-	- rmfl < filename (string) >
+	- rmfile < filename (string) >
 		:: Remove file with < filename > as it's name, at the current folder
 		-- WR-REP
 
-	-showinfo < file (string) >
+	-shinfo < file (string) >
 		:: Show information about the file < path >
 		-- FI-REQ
-
-	-showowner < file (string) >
-		:: Show the owner ID of the file < path > and its size in bytes
-		-- FI-REP
 */
-
-	Falta:
-		DC-REP
-		DR-REP
-		RD-REQ
-		RD-REP
