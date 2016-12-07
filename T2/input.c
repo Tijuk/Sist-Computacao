@@ -1,11 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "input.h"
 
-#define MAX_PATH_SIZE 300
-#define MAX_SIZE 100
+#define MAX_PATH_SIZE 3000
+#define MAX_SIZE 1000
 #define SPACE 32
 
 #define MKDIR 0
@@ -34,20 +30,23 @@ int count_level(char *path);
 void show_man(char *cmd);
 char* pretty_path(char *path);
 
-void set_root(char *root)
+void set_root(void)
 {
-	strcpy(root_path,root);
+	strcpy(root_path,"SFS-root-di/");
 }
 
-char* get_input(char *path)
+char* get_input(void)
 {
 	char *execucao;
 	char input[MAX_SIZE];
 	int i;
+	char path[MAX_PATH_SIZE];
+	set_root();
 	level = count_level(root_path) - 1;
 	int loop = 0;
 	while(loop == 0)
 	{
+		printf("Insert a command: ");
 		scanf(" %[^\n]", input);
 		execucao = get_exec(path, input);
 		if(execucao != NULL) loop = 1;
@@ -230,6 +229,7 @@ int get_mode(char *s)
 	else if(strcmp(s,"help")==0) val = 9;
 	else if(strcmp(s,"man")==0) val = 10;
 	else if(strcmp(s,"cmdclean")==0) val = 11;
+	else val = -1;
 	return val;
 }
 
@@ -278,58 +278,65 @@ void show_man(char *cmd)
 	printf("Comando: %s\n",cmd);
 	if(mode == MKDIR)
 	{
-		printf("\tRecebe string com nome de um diretorio\n");
 		printf("\tCriar um diretorio com esse nome no diretorio atual\n");
+		printf("\t\tRecebe string com nome de um diretorio\n");
 	}
 	else if(mode == RMDIR)
 	{
-		printf("\tRecebe string com nome de um diretorio\n");
 		printf("\tDeleta um diretorio com esse nome no diretorio atual, e tambem os sub-diretorios\n");
+		printf("\t\tRecebe string com nome de um diretorio\n");
 	}
 	else if(mode == OPENDIR)
 	{
-		printf("\tRecebe string com nome de um diretorio\n");
 		printf("\tAltera o diretorio atual para o diretorio recebido como parametro\n");
+		printf("\t\tRecebe string com nome de um diretorio\n");
 	}
 	else if(mode == LSALL)
 	{
-		printf("\tNao recebe parametros\n");
 		printf("\tLista tudo no diretorio atual\n");
+		printf("\t\tNao recebe parametros\n");
 	}
 	else if(mode == RDFILE)
 	{
 		printf("\tLe um arquivo\n");
-		printf("\tRecebe:\n<file> [string] = nome do arquivo\n");
-		printf("\t<nbytes> [int] = numero de bytes a serem lidos\n");
-		printf("\t<offset> [int] = posicao de onde a leitura sera iniciada\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
+		printf("\t\t<nbytes> [int] = numero de bytes a serem lidos\n");
+		printf("\t\t<offset> [int] = posicao de onde a leitura sera iniciada\n");
 	}
 	else if(mode == WRFILE)
 	{
 		printf("\tEscreve um arquivo\n");
-		printf("\tRecebe:\n<file> [string] = nome do arquivo\n");
-		printf("\t<content> [string] = conteudo a ser escrito no arquivo\n");
-		printf("\t<nbytes> [int] = numero de bytes a serem lidos\n");
-		printf("\t<offset> [int] = posicao de onde a leitura sera iniciada\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
+		printf("\t\t<content> [string] = conteudo a ser escrito no arquivo\n");
+		printf("\t\t<nbytes> [int] = numero de bytes a serem lidos\n");
+		printf("\t\t<offset> [int] = posicao de onde a leitura sera iniciada\n");
 	}
 	else if(mode == MKFILE)
 	{
 		printf("\tDeleta um arquivo\n");
-		printf("\tRecebe:\n<file> [string] = nome do arquivo\n");
-		printf("\t<nbytes> [int] = tamanho do arquivo a ser criado\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
+		printf("\t\t<nbytes> [int] = tamanho do arquivo a ser criado\n");
 	}
 	else if(mode == MKFILE)
 	{
 		printf("\tCria um arquivo\n");
-		printf("\tRecebe:\n<file> [string] = nome do arquivo\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
 	}
 	else if(mode == SHOWINFO)
 	{
 		printf("\tExibe informacoes a respeito de um arquivo\n");
-		printf("\tRecebe:\n<file> [string] = nome do arquivo\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
 	}
 	else if(mode == CMDCLEAN)
 	{
 		printf("\tLimpa o Console\n");
+	}
+	else
+	{
+		printf("\tSinto, voce inseriu:\n");
+		printf("\t\tComando InvalidoNao\n");
+		printf("\t\tou\n");
+		printf("\t\tExiste Manual para esse comando\n");
 	}
 }
 
