@@ -1,4 +1,4 @@
-#include "code_decode.h"
+#include "encoder.h"
 #define CMAX 3000
 
 /* ------------------------------------------------- *\

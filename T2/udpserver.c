@@ -12,6 +12,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "auxiliar.h"
+#include "encoder.c"
+
 #define BUFSIZE 1024
 
 extern int alphasort();
@@ -21,13 +23,13 @@ char root_path[MP];
 void error(char *msg) {
   perror(msg);
   exit(1);
-}
+}/*
 int parse_buff(char *buff, int *cmd, char *name) {
     char *cmdstr;    
     cmdstr = strtok(buff," ");
     name = strtok(NULL,"\0");
     cmd = atoi(cmdstr);
-}
+}*/
 
 int main(int argc, char **argv) {
 
@@ -123,12 +125,18 @@ int main(int argc, char **argv) {
 as funçõe auxiliares para tratar o comando enviado pelo cliente.					 
 */		
 /**********************************************************************/
+	
+	// Pegar o root 
 	strcpy(root_path,pathname);
-	get_decision(a,buf);
-	exibe_code(a);
 
-	/*Vou criar uma funcao auxiliar para interpretar o comando lido*/
+	
+	// Pega a decisao da string	
+	get_decision(a,buf);
+	// Teste dos parametros
+	exibe_code(a);
+	
 	sprintf(lpath,"%s%s", pathname, a->path);
+	/*Vou criar uma funcao auxiliar para interpretar o comando lido*/
 	get_command(a,lpath);
 
 /***********************************************************************/
@@ -151,6 +159,9 @@ as funçõe auxiliares para tratar o comando enviado pelo cliente.
     /* 
      * sendto: echo the input back to the client 
      */
+
+	char * aux1; 
+
     n = sendto(sockfd, buf, strlen(buf), 0, 
 	       (struct sockaddr *) &clientaddr, clientlen);
  

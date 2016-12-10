@@ -46,6 +46,7 @@ char* get_input(void)
 	int loop = 0;
 	while(loop == 0)
 	{
+ 		printf("Dir Atual: %s%s\n", root_path, path);
 		printf("Insert a command: ");
 		scanf(" %[^\n]", input);
 		execucao = get_exec(path, input);

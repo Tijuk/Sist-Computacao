@@ -1,11 +1,83 @@
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <sys/dir.h>
+#include <dirent.h>
+#include <sys/param.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
-#include "auxiliar.h"
+#include <sys/xattr.h>
+
 extern int alphasort();
 int clienteID;
 
 #define MP 300
 #define MPATH 100
 #define MAXARG 10
+
+typedef struct array_names{
+	int a;
+	int b;
+}Ar;
+
+typedef struct args_list{
+	char arg[MAXARG][MP];
+	int nargs;
+}Args;
+
+typedef struct info{
+	char *code;
+	char *path;
+	int pathlen;
+	char *path2;
+	int path2len;
+	char *payload;
+	int nrbytes;
+	int offset;
+	int owner;
+	char *permissions;
+	int filelength;
+	Ar lst[40];
+}Info;
+typedef enum dir_returns
+
+{
+    D_OK = 0,
+    D_MemoInsufic = 1,
+    D_AcessoNegado = 2,
+    D_DirecVazio = 3,
+    D_DirecNaoEncontrado = 4,
+    D_NotDiretorio = 5,
+}D_Ret;
+
+/*FUNCOES DE LEITURA*/
+char* scpy(char *s2);
+void exibe_code(Info *a);
+int check_code(char *code);
+void get_args(char *s, Args *ar);
+int read_code(char *s, Info *a, Args *ar);
+void reader(int mode, Args *ar, Info *a);
+void viewer(int mode, Info *a);
+
+/*---------------------*/
+
+/*FUNCOES DE MANIPULACAO DE DIRETORIOS*/
+char* removeslash(char *s);
+int remove_directory(const char *path);
+int file_select(struct direct *entry);
+D_Ret liststuff(char *path);
+D_Ret checkpathright(char *pathname, char *findpath);
+D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len);
+D_Ret deletedirectory(char *path, int path_len, char* dirname, int dir_len);
+D_Ret acessdirectory(char *pathname, char *path);
+void go_home(char *path, char *root);
+/*---------------------*/
+
+void get_command(Info *a, char* lpath);
 
 void get_decision(Info *a,char *cmdClient);
 char root_path[MP];
@@ -23,41 +95,59 @@ char* removeslash(char *s)
 	}
 	return ret;
 }
-
+/*Criar Diretorio*/
 D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len)
 {
 	int status;
 	char *dirn;
 	char *path2;
 	char *oldpath;
+	FILE *fp;
 	
 	struct stat buffer;
 	
-	oldpath = (char*)malloc(MP*sizeof(char));
-	getcwd(oldpath,MP*sizeof(char));
+	oldpath = (char*)malloc(200*sizeof(char));
+	//Salvar o path origem
+	getcwd(oldpath,200*sizeof(char));
 
 	printf("Path do diretorio que queremos adicionar %s\n",path);
-	
-	dirn = dirname;
+
+	//Entrar no diretorio descrito no path
 	chdir(path);
 
-	path2 = (char*)malloc(MP*sizeof(char));
-
-	getcwd(path2,MP*sizeof(char));
-	//printf("Teste path corrente %s\n",path2);
-		
-	printf("Creating: %s at %s\n",dirn,path2);
-	status = mkdir(dirn,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	//Gravar o path atual do diretorio
+	path2 = (char*)malloc(200*sizeof(char));
+	getcwd(path2,200*sizeof(char));
 	
-	stat(dirn,&buffer);	
-	buffer.st_uid = 10;
+	printf("Creating: %s at %s\n",dirname,path2);
+	//Criar o diretorio	
+	status = mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	//Gravar no diretorio criado o id do cliente
+	char d1,codtemp1 = 0x1; //client
+	char d2,codtemp2 = 0x2; //permissao
 
-	printf("Valor do cliente dono do diretorio %s: %d",dirn);	
+	int ret1,ret2,ret3,ret4;
+	ret1 = setxattr(dirname,"user.client",&codtemp1,1,0);
+	ret3 = setxattr(dirname,"user.permissao",&codtemp2,1,0);
 
-	printf("Path do diretorio que queremos voltar %s\n",oldpath);
+	if(ret1 < 0)
+		printf("erro1\n");
+	if(ret3 < 0)
+		printf("erro2\n");
+
+	ret2=getxattr(dirname,"user.client",&d1,1);
+	ret4=getxattr(dirname,"user.permissao",&d2,1);
+
+	if(ret4 < 0)
+		printf("erro3\n"); 	
+	if(ret2 < 0)
+		printf("erro4\n");
+
+	printf("Client id:%d\n",d1);
+	printf("Permissao:%d\n",d2);
+	//Voltar pro diretorio de origem
 	chdir(oldpath);
 
-		
 
 	if(status==0)
 	{
@@ -69,7 +159,7 @@ D_Ret createdirectory(char *path, int path_len, char* dirname, int dir_len)
 	}	
 
 }
-
+/*Deletar Diretorio*/
 D_Ret deletedirectory(char *path, int path_len, char* dirname, int dir_len)
 {
 	int i;
@@ -131,16 +221,24 @@ void get_command(Info *a, char * lpath){
 	else if(strcmp(a->code,"DL-REQ")==0)
 	{
 		printf("%s\n",lpath);
+		//start_code();
 		liststuff(lpath);
 	}
 }
-
+/*Lista Diretorio*/
 D_Ret liststuff(char *pathname)
 {
     int count,i;
     static struct direct **files;
     static struct stat status;
     int file_select();
+
+
+	char aux[MP];
+		
+	strcpy(aux,"SFS-root-di/");
+	strcat(aux,pathname);
+	strcpy(pathname,aux);
 
     printf("pathname que vou ler:%s\n",pathname);
     
@@ -158,7 +256,10 @@ D_Ret liststuff(char *pathname)
 		printf("Diretorio ===> %s\n",files[i-1]->d_name);
 	else
         	printf("Arquivo ==========> %s\n", files[i-1]->d_name);
+	//ins_path(files[i-1]->d_name);
     }
+
+
     printf("\n");
     return D_OK;
 }
@@ -199,6 +300,7 @@ void get_decision(Info *a,char *cmdClient)
 	read_code(cmdClient,a,ar);
 }
 
+/*Remover diretorio*/
 int remove_directory(const char *path)
 {
 	DIR *d = opendir(path);
@@ -424,31 +526,4 @@ char* scpy(char *s2)
 	s1 = (char*)malloc(n * sizeof(char));
 	strcpy(s1,s2);
 	return s1;
-}
-
-void teste(Info *a, Args *ar)
-{
-	FILE *arq;
-	int i,tot;
-	char al;
-	char s[200];
-	arq = fopen("ent","r");
-	if(arq == NULL)
-	{
-		printf("Erro na abertura do arquivo\n");
-		exit(0);
-	}
-	while(1)
-	{
-		fscanf(arq, "%s", s);
-		if(strcmp(s,"ENDFILE")==0)
-		{
-			break;
-		}
-		printf("%s\n",s);
-		get_args(s,ar);
-		read_code(s,a,ar);
-		exibe_code(a);
-	}
-	fclose(arq);
 }

@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include "input.c"
 
 #define BUFSIZE 1024
 
@@ -58,11 +59,14 @@ int main(int argc, char **argv) {
     
     /* get a message from the user */
     bzero(buf, BUFSIZE);
-    printf("Please enter msg: ");
 
-    while(fgets(buf, BUFSIZE, stdin) != NULL){
+	char * temp;
 
 
+    while(1){
+
+		temp = get_input();
+		strcpy(buf,temp);		
 
 	    /* send the message to the server */
 	    serverlen = sizeof(serveraddr);
@@ -77,7 +81,7 @@ int main(int argc, char **argv) {
 	    printf("Echo from server: %s\n", buf);
 	    /* get a message from the user */
 	    bzero(buf, BUFSIZE);
-	    printf("Please enter msg: ");
+
     }
     return 0;
 }
