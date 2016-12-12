@@ -2,7 +2,7 @@
 #define CMAX 3000
 
 /* ------------------------------------------------- *\
-		ENCODE
+ENCODE
 \* ------------------------------------------------- */
 
 typedef struct lista_wut{
@@ -45,9 +45,9 @@ char* isolate_file_name(char *path)
 	i = j = 0;
 	for (i = strlen(path); path[i] != '/'; i--);
 	i++;
-	for (; path[i] != '\0'; i++,j++)
+	for (; path[i] != '\0'; i++, j++)
 	{
-		 file[j] = path[i];
+		file[j] = path[i];
 	}
 	file[j] = '\0';
 	return file;
@@ -66,7 +66,7 @@ char* strcat_all_paths(void)
 	char *all;
 	char *path;
 	all = (char*)malloc(sizeof(char)*CMAX);
-	path = (char*)malloc(sizeof(char)*300);
+	path = (char*)malloc(sizeof(char)* 300);
 	strcpy(all, encoder->path[0]);
 	for (i = 0; i < encoder->n; i++)
 	{
@@ -76,7 +76,7 @@ char* strcat_all_paths(void)
 			strcpy(all, path);
 		}
 		else
-		strcat(all, path);
+			strcat(all, path);
 	}
 	return all;
 }
@@ -90,7 +90,7 @@ char* encode(void)
 	final = code;
 	char pre[] = "DL-REQ";
 	code = strcat_all_paths();
-	sprintf(final, "%s,%s%s", pre, code,po);
+	sprintf(final, "%s,%s%s", pre, code, po);
 	return final;
 }
 int count_bars(int n)
@@ -109,7 +109,7 @@ char* pos(void)
 {
 	int a[40];
 	int b[40];
-	int i,lvl;
+	int i, lvl;
 	int spc = 1;
 	int minlvl = count_bars(0);
 	int lastlvl;
@@ -130,14 +130,14 @@ char* pos(void)
 		if (lvl == minlvl) b[i] = 0;
 		lastlvl = lvl;
 	}
-	return vet2string(a,b);
+	return vet2string(a, b);
 }
 char* vet2string(int *a, int *b)
 {
 	char *s, num1[4], num2[4], *aux;
 	int i;
 	s = (char*)malloc(sizeof(char)*CMAX);
-	aux = (char*)malloc(sizeof(char)*300);
+	aux = (char*)malloc(sizeof(char)* 300);
 	for (i = 0; i < encoder->n; i++)
 	{
 		sprintf(num1, "%d", a[i]);
@@ -334,11 +334,11 @@ void exibe_decoded(A* decode)
 		v = decode->b[i];
 		/*if (v == 0)
 		{
-			lvl = 0;
+		lvl = 0;
 		}
 		else if (v != last)
 		{
-			lvl++;
+		lvl++;
 		}*/
 		lvl = v;
 		space(lvl);
