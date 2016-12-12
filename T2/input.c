@@ -28,6 +28,7 @@ static char patho[MAX_PATH_SIZE];
 static int clientID;
 static int newclient = NEWCLIENT;
 
+void insert_barra(char *s);
 void start_new_client(void);
 int get_mode(char *s);
 void get_all_commands(int index, char *command);
@@ -48,7 +49,7 @@ void start_new_client(void)
 
 void set_root(void)
 {
-	strcpy(root_path, "SFS-root-di/");
+	strcpy(root_path, "SFS-root-di");
 }
 
 char* get_input(void)
@@ -64,7 +65,6 @@ char* get_input(void)
 		start_new_client();
 		newclient = OLDCLIENT;
 	}
-	clientID = 90;
 	if (clientID == NEWCLIENT)
 	{
 		printf("You need to log in before issuing any commands.\nPlease enter your ID [Numerical Values Only]: ");
@@ -106,16 +106,16 @@ char* get_exec(char *path, char *input)
 		if (mode == MKDIR) get_all_commands(3, cmd);
 		else if (mode == RMDIR) get_all_commands(4, cmd);
 		dirname = get_word(2, input);
-		sprintf(exec, "%s,%s,%d,%s,%d", cmd, path, strlen(path), dirname, strlen(dirname));
+		sprintf(exec, "%s,%s,%d,%s,%d", cmd, path, strlen(path), dirname, strlen(dirname)+1);
 		return exec;
 	}
 	else if (mode == OPENDIR)
 	{
 		char *newpath;
 		newpath = get_word(2, input);
-		if (strcmp("..", newpath) == 0) backward(path);
-		else if (strcmp("root", newpath) == 0) strcpy(path, ROOT_PATH);
-		else sprintf(path, "%s%s/", path, newpath);
+		if (strcmp("/..", newpath) == 0) backward(path);
+		else if (strcmp("/root", newpath) == 0) strcpy(path, ROOT_PATH);
+		else sprintf(path, "%s%s", path, newpath);
 		return NULL;
 	}
 	else if (mode == LSALL)
@@ -249,8 +249,9 @@ char* get_word(int word_number, char *input)
 			if (word_number == j) break;
 		}
 	}
-	action = (char*)malloc(strlen(word) * sizeof(char));
+	action = (char*)malloc(strlen(word)+1 * sizeof(char));
 	strcpy(action, word);
+	if(word_number > 1) insert_barra(action);
 	return action;
 }
 
@@ -285,18 +286,20 @@ int nparam(char *input)
 void backward(char *path)
 {
 	int i;
-	for (i = strlen(path) - 2; path[i] != '/'; i--)
+	printf("\n");
+	for (i = strlen(path); path[i] != '/'; i--)
 	{
 		path[i] = '\0';
 		if (i == 0) break;
 	}
+	path[i] = '\0';
 }
 
 int count_level(char *path)
 {
 	int i, j;
 	for (i = 0, j = 0; path[i] != '\0'; i++) if (path[i] == '/') j++;
-	return j;
+	return j-1;
 }
 
 char* pretty_path(char *path)
@@ -396,3 +399,28 @@ void cat_clientID(char* exec, char* ID)
 	strcpy(exec, temp);
 }
 
+char* teste_input(FILE *arq,int n)
+{
+	char *execucao;
+	char input[MAX_SIZE];
+	char cID[30];
+	set_root();
+	level = count_level(root_path) - 1;
+	clientID = 9999;
+	sprintf(cID, "%d", clientID);
+	printf("[%s @ %s%s]: ", cID, root_path, patho);
+	fscanf(arq," %[^\n]", input);
+	printf("%s\n", input);
+	execucao = get_exec(patho, input);
+	if (clientID == NEWCLIENT) return get_input();
+	cat_clientID(execucao, cID);
+	return execucao;
+}
+
+void insert_barra(char *s)
+{
+	char *aux;
+	aux = (char*)malloc(sizeof(char)* MAX_SIZE);
+	sprintf(aux,"/%s",s);
+	strcpy(s,aux);
+}
