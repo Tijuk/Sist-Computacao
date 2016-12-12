@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,15 +15,15 @@ void decode(char *code);
 
 void start_code(void);
 /*
-	start_code = inicia o encode(inicia as variaveis)
-	deve ser chamada toda vez que quiser iniciar um NOVO encode
+start_code = inicia o encode(inicia as variaveis)
+deve ser chamada toda vez que quiser iniciar um NOVO encode
 */
 void ins_path(char *path);
 /*
-	ins_path, joga o path(JA CORTADO) dentro de uma pilha(vetor)
+ins_path, joga o path(JA CORTADO) dentro de uma pilha(vetor)
 */
 
 char* encode(void);
 /*
-	retorna a string codificada
+retorna a string codificada
 */
