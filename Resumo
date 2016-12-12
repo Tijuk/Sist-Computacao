@@ -1,0 +1,155 @@
+Sistemas:
+	-Monoprogramaveis
+		-Processador, Memória, Periféricos decidacos a um unico programa.
+	-Multiprogramaveis
+		-Recursos computacionais são compartilhados através de diversos programas.
+			-Um sistema monousuário pode ser um sistema multiprogramavel, uma vez que um único usuário pode execurar diversas tarefas concorrentemente.
+
+	-Sistemas com multiplos processadores
+		-Sistemas com 2 ou mais UCPs (Unidade Central de Processamento) interligadas e trabalhando em conjunto. Permite que vários programas sejam executados ao mesmo tempo ou que um mesmo programa seja subdividido em partes para serem executadas simultaneamente em mais de um processador.
+
+	-system call:
+		-Porta de entrada para o acesso ao núcleo do sistema operacional e a seus serviços. Sempre que um usuário ou aplicação deseja algum serviço do sistema, é realizada uma 			chamada a uma de suas rotinas através de uma system call.
+		-Para um programa o, o mecanismo de ativação e comunicação entre o programa e o SO é semelhante ao mecanismo implementado quando um programa chama uma subrotina.
+
+	-Modo Kernel:
+		-No modo Kernel é possível trocar de modulo, acessar estruturas do núcleo, executar instruções de mudança de mapeamento de memória, manipular qualquer processo, desabilitar certas instruções.
+
+	-Contexto de Hardware:
+		-Contexto de Hardware armazena o conteúdo dos registradores gerais da UCP, além dos registradores de uso específico como "program counter" (PC), "stack pointer" (SP) e registradores de status.
+		> Processo em execução: Contexto de Hardware armazanado nos registradores do processador
+		> Processo não em execução: Sistema salva o Contexto de Hardware no processo
+
+Processos:
+	-Um processo é formado por contexto de Hardware, Contexto de Software e espaço de endereçamento.
+	-Tipos:
+		-CPU-Bound:
+			-Processos onde o seu tempo de execução é definida pelo processador
+		-I/O-Bound:
+			-Processos que passam a maior parte do seu tempo em modo de espera, pois utiliza um elevado número de processos.
+
+		-Foreground
+			-Processos que interagem com os usuários
+			-Deve esperar o término da execução de um programa para executar um novo comando.
+		-Background
+			-Processos não associados a usuários. Possuem funções específicas.
+			-Não precisa esperar nada. É um processo já maduro, um mocinho.
+
+	-Possíveis estados do processo:
+		-Execução(Running)
+			-Processo sendo executado pela UCP
+		-Pronto(Ready)
+			-Processo aguardando ser executado
+		-Espera(Waiting)
+			-Processo aguardando a ocorrencia de sinal/interrupção
+				-Uma interrupção é sempre gerado por algum evento externo ao programa e neste caso, independe da instrução que esta sendo executada
+					>Programa em execução é interrompido
+					>Controle desviado para uma rotina responsável por tratar o evento ocorrido, denominada rotina de tratamento. Um programa só pode voltar a ser executado, se no momento em que ocorreu a interrupção, foram salvos o conteúdo de seus registradores, que deverão ser restaurados par a continuação do programa.
+		-Criar(New)
+			-Processo foi criado
+		-Finalizado(Terminated)
+			-Processo terminou sua execução
+
+	-Transição entre os estados:
+		-New (admitted) > Ready
+			-O novo processo termina de ser carregado em memória, estando pronto para executar
+		-Ready (scheduler dispatch) > Running
+			-O processo é escolhido pelo escalonador para ser executado, entre os demais processos Ready
+		-Running(interrupt) > Ready
+			-Esgotamento da fatia de tempo destinada ao processo
+		-Running(exit) > Terminated
+			-O processo encerra sua execução ou é abortado em consequência de algum erro (acesso inválido a memória, instrucao ilegal, divisao por zero)
+			-Em geral, o processo que deseja terminar avisa ao sistema operacional através de uma chamada de sistema.
+	-Threads:
+		-Linha de execução independente(e concorrente) dentro de um mesmo processo.
+	
+
+Tipo de Interrupcoes:
+	-E/S: Iniciados pelo HW, notificam o processador de que o estado do dispositivo de E/S mudou
+	-Timer: Evento periódico para agendamenteo de ações e monitoramento de desempenho
+	-Inter-CPU: Em sistemas multi-processados, para comunicação e sincronização entre processadores
+	-Trap: Exceção ou Chamada do Sistema
+
+
+Comunicação entre processos:
+	-Arquivos
+	-FIFOs
+		-Tipo especial de arquivo visível no sistema de arquivos
+		-Na troca de dados através do FIFO o núcleo passa os dados internamente sem escrita no sistema de arquivos.
+		-FIFO persiste dados além do processo que o criou
+		-O FIFO precisa ser aberto nas duas pontas(para leitura e escrita) antes de qualquer transmissao de dados.
+			-Normalmente, a chamada a open() bloqueia até que a outra ponta também abra o FIFO
+			-FIFOs também podem ser abertos em modo não-bloqueante. Nesse caso, o open para Read-Only será sucessida mesmo se nenhum processo tiver ainda aberto o FIFO para escrita.
+	-PIPEs
+	-Memoria Compartilhada
+
+Escalonamentos entre Processos
+	-Objetivos:
+		-Garantir justiça(fairness)
+			-Cada processo ganha quantum igual da CPU
+		-Aumentar eficiencia
+			-manter alta a utilizacao de CPU
+		-Minimizar tempo médio de permanencia dos processos no sistema
+		-Maximizar vazão
+			-Maximizar o número de processos processados por unidade de tempo
+	-Escalonamento de longo prazo:
+		-Determina quando um processo inicia a execução
+		-Ao ser criado, processo recebe uma prioridade(vai para uma fila dos prontos)
+	-Escalonamento de Curto Prazo:
+		-Escolhe um dos processos da fila de prontos para executar.
+	-Política de Escalonamento:
+		-Escalonamento Preemptivos:
+			-O OS pode fazer um processo ir de Running para Ready, com objetivo de alocar outro processo na UCP.
+			-A cada clock tick, o escalonador verifica se o processo correte ja expriou o seu quantum de tempo, e se sim, interrompe-o, e escolhendo outro processo para executar.
+			-Shortest Remaining Time(SRT)
+				-A cada novo processo que chega, o escalonador avalia seu tempo de execução
+				-Se estimativa de tempo do novo processo for menor do que do tempo faltante do processo em execuçao, esse ẽ interrompido e o novo processo é executado. Senão, o processo anterior continua a executar
+				-O processo que não é executado imediatamente é colocado na fila de prontos na posição proporcional ao seu tempo de execução remanescente
+			- Escolha Circular (Round Robin)
+				-Processos prontos ficam em uma fila de prontos
+				-Cada processo recebe um quanto de tempo de CPU. Após esgotar o tempo, é interrompido e posto no final da fila.
+				-Objetivo: justiça no atendimento de muitos processos centrados em E/S
+
+		-Escalonamento Não-Preemptivos:
+			-Nada tira ele do estado Running, somente ele mesmo, ou ele terminar de execucar.
+	-Escalonamento de Multiplas Filas (ML)
+		-Da prioridade a tipos de processos. Processos no mesmo tipo escalonados usando-se Round Robin.
+		-Para evitar inaciação(um processo nunca executar) pode-se definir tempo máximos para cada categoria.
+
+			-Escalonador só é chamado quando o processo é bloqueado(chamada de sistema) ou termina.
+			- First In - First Out
+				-Execução por ordem de chegada.
+			- Shortest Job First (SJF)
+				-Todos os jobs são ordenados segundo tempo de execução esperados
+		-Escalonamento de Multiplos Niveis com Feedback(MLF)
+			-Similar ao ML, mas prioridade varia dinamicamente
+			-Todo processo comeca com o nivel de prioridade mais alto (n)
+			-Cada nível de prioridade descreve um tempo maximo
+			-Maior prioridade = menor tempo
+
+Códigos:
+	-execve();
+	-fork()
+		-Retorna -1 para erro
+		-Retorna 0 quando for para o filho
+		-Retorna >1 quando for para o pai
+			-No pai, o valor do pid, é o id do filho.
+	-Memoria compartilhada
+		-shmget();
+		-shmat
+		
+	-Descritor de Arquivos:
+		-open();
+		-close();
+			-close(0) fecha a entrada padrao
+			-close(1) fecha a saída padrao
+		-dup();
+			-abre arquivo para a primeira posicao vazia
+		-dup2();
+			-abre arquivo para uma determinada posicao
+	-Sinais:
+		-kill(pid, sinal)
+		-Handler(int sinal)
+		-signal(int sinal, Handler())
+	-Pipe:
+		-pipe();
