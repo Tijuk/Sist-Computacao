@@ -1,5 +1,4 @@
 #include "encode.h"
-#define CMAX 3000
 
 /* ------------------------------------------------- *\
 ENCODE
@@ -33,8 +32,8 @@ void ins_path(char *path)
 	char *isolated;
 	char *newpath;
 	newpath = (char*)malloc(sizeof(char)* 300);
-	cut_path(path);
 	strcpy(newpath, path);
+	cut_path(newpath);
 	adjust_path(newpath);
 	strcpy(encoder->path[encoder->n], newpath);
 	isolated = isolate_file_name(newpath);
@@ -113,7 +112,7 @@ char* encode(void)
 	char* code = (char*)malloc(sizeof(char)*CMAX);
 	char* po = pos();
 	final = code;
-	char pre[] = "DL-REQ";
+	char pre[] = "DL-REP";
 	code = strcat_all_paths();
 	sprintf(final, "%s,%s%s", pre, code, po);
 	return final;
@@ -173,6 +172,14 @@ char* vet2string(int *a, int *b)
 	}
 	return s;
 }
+
+char* solo_encode(void)
+{
+	char *string;
+	string = encode();
+	if(string[0] == 'D') string[0] = 'O';
+	return string;
+}
 /* ------------------------------------------------- *\
 DECODE
 \* ------------------------------------------------- */
@@ -226,6 +233,7 @@ int get_n_num(char *s);
 char* word(A* news, int n, char* code);
 void exibe_decoded(A* decode);
 void space(int n);
+void solo_decode(A* decode);
 
 void decode(char *code)
 {
@@ -235,7 +243,14 @@ void decode(char *code)
 	fst = fstspos(code);
 	flnm = getfilenames(code);
 	decoded = get_struct(fst, flnm);
-	exibe_decoded(decoded);
+	if(code[0] == 'D' && code[1] == 'L')
+	{
+		exibe_decoded(decoded);
+	}
+	else if(code[0] == 'O' && code[1] == 'L')
+	{
+		solo_decode(decoded);
+	}
 }
 char* getfilenames(char *s)
 {
@@ -309,12 +324,12 @@ void fill_ab(A* news, char *s)
 }
 char* word(A* news, int n, char* code)
 {
-	int i, j, k;
+	int i;
 	int comeco, fim;
 	char *word;
 	comeco = news->a[n] - 1;
-	fim = news->a[n + 1] - 1;
-	i = j = k = 0;
+	if(n== news->n_elem-1) fim = strlen(code);
+	else fim = news->a[n + 1] - 1;
 	word = (char*)malloc(300 * sizeof(char));
 	for (i = comeco; i < fim; i++)
 	{
@@ -323,11 +338,12 @@ char* word(A* news, int n, char* code)
 	word[i - comeco] = '\0';
 	return word;
 }
+
 void get_all_word(A* news, char* s)
 {
 	int i;
 	char *w;
-	for (i = 0; i < news->n_elem - 1; i++)
+	for (i = 0; i < news->n_elem; i++)
 	{
 		w = word(news, i, s);
 		strcpy(news->filenames[i], w);
@@ -354,21 +370,22 @@ void exibe_decoded(A* decode)
 	int last = 0;
 	int lvl = 0;
 	int v;
-	for (i = 0; i < decode->n_elem - 1; i++)
+	for (i = 0; i < decode->n_elem; i++)
 	{
 		v = decode->b[i];
-		/*if (v == 0)
-		{
-		lvl = 0;
-		}
-		else if (v != last)
-		{
-		lvl++;
-		}*/
 		lvl = v;
 		space(lvl);
 		last = v;
 		printf("%s\n", decode->filenames[i]);
-		//printf("%s - %d - %d\n", decode->filenames[i], decode->a[i], decode->b[i]);
 	}
+}
+
+void solo_decode(A* decode)
+{
+	int i;
+	for(i=0; i < decode->n_elem-1; i++)
+	{
+		printf("%s\t",decode->filenames[i]);
+	}
+	printf("%s\n",decode->filenames[i]);
 }

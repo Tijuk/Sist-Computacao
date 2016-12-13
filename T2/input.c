@@ -1,12 +1,9 @@
 #include "input.h"
 
-#define MAX_PATH_SIZE 3000
-#define MAX_SIZE 1000
-#define SPACE 32
-
 #define OLDCLIENT 1
 #define NEWCLIENT -1
-#define ROOT_PATH ""
+
+#define SPACE 32
 
 #define MKDIR 0
 #define RMDIR 1
@@ -21,6 +18,8 @@
 #define MANUAL 10
 #define CMDCLEAN 11
 #define EXIT 12
+#define ONELIST 13
+#define CHGPERM 14
 
 static char root_path[MAX_PATH_SIZE];
 static int level;
@@ -29,6 +28,7 @@ static int clientID;
 static int newclient = NEWCLIENT;
 
 void insert_barra(char *s);
+void remove_barra(char *s);
 void start_new_client(void);
 int get_mode(char *s);
 void get_all_commands(int index, char *command);
@@ -40,6 +40,7 @@ int count_level(char *path);
 void show_man(char *cmd);
 char* pretty_path(char *path);
 void cat_clientID(char* exec, char* ID);
+void tabela_permissoes(void);
 
 void start_new_client(void)
 {
@@ -65,6 +66,7 @@ char* get_input(void)
 		start_new_client();
 		newclient = OLDCLIENT;
 	}
+	clientID = 145;
 	if (clientID == NEWCLIENT)
 	{
 		printf("You need to log in before issuing any commands.\nPlease enter your ID [Numerical Values Only]: ");
@@ -131,9 +133,12 @@ char* get_exec(char *path, char *input)
 		if (mode == RDFILE)
 		{
 			get_all_commands(0, cmd);
-			int nbytes = atoi(get_word(4, input));
-			int offset = atoi(get_word(5, input));
-			sprintf(exec, "%s,%s,%d,,%d,%d", cmd, path, strlen(path), nbytes, offset);
+			char *auxiliar;
+			auxiliar = get_word(3,input);remove_barra(auxiliar);
+			int nbytes = atoi(auxiliar);
+			auxiliar = get_word(4,input);remove_barra(auxiliar);
+			int offset = atoi(auxiliar);
+			sprintf(exec, "%s,%s%s,%d,,%d,%d", cmd, path,filename,strlen(path)+strlen(filename), nbytes, offset);
 		}
 		else
 		{
@@ -146,19 +151,25 @@ char* get_exec(char *path, char *input)
 			if (mode == WRFILE)
 			{
 				payload = get_word(3, input);
-				int nbytes = atoi(get_word(3, input));
-				int offset = atoi(get_word(4, input));
+				char *auxiliar;
+				auxiliar = get_word(4,input);remove_barra(auxiliar);
+				int nbytes = atoi(auxiliar);
+				auxiliar = get_word(5,input);remove_barra(auxiliar);
+				int offset = atoi(auxiliar);
+				remove_barra(payload);
 				sprintf(exec, "%s,%s,%d,%d", exec, payload, nbytes, offset);
 			}
 			else if (mode == MKFILE)
 			{
-				int nbytes = atoi(get_word(3, input));
-				sprintf(exec, "%s,,%d,%d", exec, nbytes, 0);
+				sprintf(exec, "%s,,%d,%d", exec, 1, 0);
 			}
 			else if (mode == RMFILE)
 			{
-				int nbytes = atoi(get_word(3, input));
-				int offset = atoi(get_word(4, input));
+				char *auxiliar;
+				auxiliar = get_word(3,input);remove_barra(auxiliar);
+				int nbytes = atoi(auxiliar);
+				auxiliar = get_word(4,input);remove_barra(auxiliar);
+				int offset = atoi(auxiliar);
 				sprintf(exec, "%s,%d,%d", exec, 0, offset);
 			}
 		}
@@ -184,12 +195,14 @@ char* get_exec(char *path, char *input)
 		printf("\trmdir\t<dirname(string)>\n");
 		printf("\topendir\t<dirname(string)>\n");
 		printf("\tlsall\n");
+		printf("\tls\n");
 		printf("\trdfile\t<file(string)> <nbytes(int)> <offset(int)>\n");
 		printf("\twrfile\t<file(string)> ");
 		printf("<content(string)> <nbytes(int)> <offset(int)>\n");
-		printf("\tmkfile\t<file(string)> <filesize(int)>\n");
+		printf("\tmkfile\t<file(string)>\n");
 		printf("\trmfile\t<file(string)>\n");
 		printf("\tshinfo\t<file(string)>\n");
+		printf("\tchperm\t<file(string)> <read_perm(int)> <write_perm(int)>");
 		printf("\thelp\n");
 		printf("\tman <command> :: MANUAL\n");
 		printf("\texit\n");
@@ -213,6 +226,25 @@ char* get_exec(char *path, char *input)
 		printf("\n");
 		return NULL;
 	}
+	else if(mode == ONELIST)
+	{
+		get_all_commands(6, cmd);
+		sprintf(exec, "%s,%s,%d", cmd, path, strlen(path));
+		return exec;
+	}
+	else if(mode == CHGPERM)
+	{
+		int rp, wp;
+		char *filename;
+		filename = get_word(2, input);
+		char *auxiliar;
+		auxiliar = get_word(3,input);remove_barra(auxiliar);
+		rp = atoi(auxiliar);
+		auxiliar = get_word(4,input);remove_barra(auxiliar);
+		wp = atoi(auxiliar);
+		get_all_commands(7,cmd);
+		sprintf(exec,"%s,%s,%d,%d,%d",cmd,path,strlen(path),rp,wp);
+	}
 	else
 	{
 		printf("Input Invalido\n");
@@ -222,13 +254,15 @@ char* get_exec(char *path, char *input)
 
 void get_all_commands(int index, char *command)
 {
-	char s[6][7];
+	char s[10][7];
 	strcpy(s[0], "RD-REQ");
 	strcpy(s[1], "WR-REQ");
 	strcpy(s[2], "FI-REQ");
 	strcpy(s[3], "DC-REQ");
 	strcpy(s[4], "DR-REQ");
 	strcpy(s[5], "DL-REQ");
+	strcpy(s[6], "OL-REQ");
+	strcpy(s[7], "CL-REQ");
 	strcpy(command, s[index]);
 }
 
@@ -271,6 +305,8 @@ int get_mode(char *s)
 	else if (strcmp(s, "man") == 0) val = 10;
 	else if (strcmp(s, "cmdclean") == 0) val = 11;
 	else if (strcmp(s, "exit") == 0) val = 12;
+	else if (strcmp(s, "ls") == 0) val = 13;
+	else if (strcmp(s, "chperm") == 0) val = 14;
 	else val = -1;
 	return val;
 }
@@ -320,6 +356,7 @@ char* pretty_path(char *path)
 void show_man(char *cmd)
 {
 	int mode;
+	remove_barra(cmd);
 	mode = get_mode(cmd);
 	printf("Comando: %s\n", cmd);
 	if (mode == MKDIR)
@@ -341,7 +378,7 @@ void show_man(char *cmd)
 	}
 	else if (mode == LSALL)
 	{
-		printf("\tLista tudo no diretorio atual\n");
+		printf("\tLista tudo no diretorio atual e seus sub-diretorios\n");
 		printf("\t\tNao recebe parametros\n");
 	}
 	else if (mode == RDFILE)
@@ -383,12 +420,26 @@ void show_man(char *cmd)
 	{
 		printf("\tLog Off do Usuario\n");
 	}
+	else if(mode == ONELIST)
+	{
+		printf("\tLista tudo apenas no diretorio atual\n");
+		printf("\t\tNao recebe parametros\n");
+	}
+	else if(mode == CHGPERM)
+	{
+		printf("\tAltera as permissoes de leitura de um diretorio\n");
+		printf("\tRecebe:\n\t\t<file> [string] = nome do arquivo\n");
+		printf("\t\t<read_perm> [int] = permissao para leitura\n");
+		printf("\t\t<write_perm> [int] = permissao para leitura\n");
+		tabela_permissoes();
+	}
 	else
 	{
 		printf("\tSinto, voce inseriu:\n");
 		printf("\t\tComando Invalido\n");
 		printf("\t\tou\n");
 		printf("\t\tNao existe Manual para esse comando\n");
+		printf("Mode = %d\n",mode);
 	}
 }
 
@@ -424,3 +475,29 @@ void insert_barra(char *s)
 	sprintf(aux,"/%s",s);
 	strcpy(s,aux);
 }
+void remove_barra(char *s)
+{
+	int i,f;
+	f = strlen(s)+1;
+	for(i=0; i < f; i++)
+	{
+		s[i] = s[i+1];
+	}
+}
+
+void tabela_permissoes(void)
+{
+	int i,j;
+	printf("\t\tPermissoes:\n");
+	printf("\t\tQuem pode ler:\n");
+	printf("\t\t\tOwner e Usuario:\t0\n");
+	printf("\t\t\tOwner Apenas:\t2\n");
+	printf("\t\t\tUsuario Apenas:\t1\n");
+	printf("\t\t\tNinguem:\t3\n");
+}
+	
+	
+	
+	
+	
+	
