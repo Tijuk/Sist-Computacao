@@ -202,7 +202,7 @@ char* get_exec(char *path, char *input)
 		printf("\tmkfile\t<file(string)>\n");
 		printf("\trmfile\t<file(string)>\n");
 		printf("\tshinfo\t<file(string)>\n");
-		printf("\tchperm\t<file(string)> <read_perm(int)> <write_perm(int)>");
+		printf("\tchperm\t<file(string)> <read_perm(int)> <write_perm(int)>\n");
 		printf("\thelp\n");
 		printf("\tman <command> :: MANUAL\n");
 		printf("\texit\n");
