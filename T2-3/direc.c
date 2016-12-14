@@ -24,6 +24,7 @@ typedef struct info{
 extern int alphasort();
 static int clienteID;
 static char aux_root_path[MP];
+static int RET_STAT = 0;
 
 // ACTIONS //
 	// DIRECTORIES //
@@ -36,6 +37,7 @@ int change_permissions(Info *a, char *path, int permission1,int permission2);
 int liststuff(char *pathname);
 	// --- //
 // ------- //
+void cat_stat(char* exec);
 char* get_file_name(char *path);
 int file_select(struct direct *entry);
 void go_home(void);
@@ -56,10 +58,13 @@ char* execute_cmd(char *input)
 	int ret;
 	Info *a;
 	char largepath[MP];
+	char *answer;
 	a = (Info*)malloc(sizeof(Info));
 	get_decision(a,input);
 	sprintf(largepath,"%s%s",aux_root_path,a->path);
-	return get_answer(a,largepath);
+	answer = get_answer(a,largepath);
+	cat_stat(answer);
+	return answer;
 }
 
 char* get_answer(Info *a, char* lpath)
@@ -107,7 +112,8 @@ char* get_answer(Info *a, char* lpath)
 	{
 		ret = createdirectory(lpath,a->pathlen, a->path2, a->path2len);
 		chdir(aux_root_path);
-		sprintf(answer,"%s,%s%s,%d",help,a->path,a->path2,a->pathlen);
+		strcat(a->path,a->path2);
+		sprintf(answer,"%s,%s,%d",s, a->path, strlen(a->path));
 		if(ret == 1) //creation failure
 		{
 			printf("Error creating directory\n");
@@ -118,7 +124,8 @@ char* get_answer(Info *a, char* lpath)
 	{
 		ret = deletedirectory(lpath,a->pathlen, a->path2, a->path2len);
 		chdir(aux_root_path);
-		sprintf(answer,"%s,%s%s,%d",help,a->path,a->path2,a->pathlen);
+		strcat(a->path,a->path2);
+		sprintf(answer,"%s,%s,%d",s, a->path, strlen(a->path));
 		if(ret == 1) //remotion failure
 		{
 			printf("Error deleting directory\n");
@@ -515,4 +522,10 @@ char* get_code_REP(int code)
 	strcpy(codes[DEF_OL],"OL_REP");
 	strcpy(s,codes[code]);
 	return s;
+}
+void cat_stat(char* exec)
+{
+	char temp[MAX_PATH_SIZE];
+	sprintf(temp, "%d,%s", RET_STAT, exec);
+	strcpy(exec, temp);
 }
