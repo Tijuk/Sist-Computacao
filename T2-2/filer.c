@@ -32,9 +32,9 @@ Filer* fill_file(int ID, char *path,char *payload, int *nrbytes, int offset);
 char* scpy(char *s2);
 void checa_erro(int erro, char *s);
 void return_values(Filer* f, char *payload, int* nrbytes);
+void cut_string(char *s, int wanted_size);
 
-int append(Filer* file);
-int rewrite(Filer *file);
+int write_file(Filer *file);
 int read_file(Filer *file);
 int create_file(Filer *file);
 int delete_file(Filer *file);
@@ -69,7 +69,7 @@ int file_manipulation(int client, int code,char *path,char *payload, int *nrbyte
 		else
 		{
 			printf("Escrevendo no arquivo: %s\n", file->path);
-			value = append(file);		
+			value = write_file(file);		
 		}
 	}
 	if(value == 1) printf("Not enough permissions bro\n");
@@ -111,46 +111,27 @@ int delete_file(Filer *file)
 	return 1;
 }
 
-int append(Filer* file)
+int write_file(Filer *file)
 {
-	struct stat sb;
-	int size;
-	int finalSize;
-	off_t len;
-	char *p;
 	int permission = check_permission(file->clientID, file->owner, file->write_perm);
 	if(permission == TRUE)
-	{	
-		int FILESIZE = strlen(file->payload);
-		int fd;
-		if(FILESIZE > file->nrbytes) FILESIZE = file->nrbytes + 2;
-		fd = open(file->path, O_RDWR | O_CREAT, 0666);
-		checa_erro(fd,"open");
-		checa_erro(fstat(fd,&sb),"fstat");
-		if(!S_ISREG (sb.st_mode))
+	{
+		char* cutted_payload = scpy(file->payload);
+		FILE* arq;
+		cut_string(cutted_payload, file->nrbytes);
+		arq = fopen(file->path,"r+");
+		if(arq==NULL)
 		{
-			fprintf(stderr, "%s is not a file\n", file->path);
-			exit(1);
+			printf("Fail to open file <%s> for writing\n", file->path);
 		}
-		size = FILESIZE + sb.st_size;
-		checa_erro(lseek(fd,size-2, SEEK_SET),"lseek");
-		checa_erro(write(fd, "", 1),"write");
-		p = mmap(0, size, PROT_WRITE|PROT_READ, MAP_SHARED, fd, file->offset);
-		if(p == MAP_FAILED)
-		{
-			perror("mmap");
-			exit(1);
-		}
-		checa_erro(close(fd),"close");
-		for(len = sb.st_size; len < size; len++)
-		{
-			p[len-1] = file->payload[len- sb.st_size];
-		}
-		checa_erro(munmap(p,size),"munmap");
+		fseek(arq,file->offset,SEEK_SET);
+		fprintf(arq,"%s",cutted_payload);
+		rewind(arq);
+		fclose(arq);
 		return 0;
 	}
 	file->offset = -1;
-	return 1;				
+	return 1;
 }
 
 int read_file(Filer *file)
@@ -248,7 +229,15 @@ int check_permission(int clientID, int owner, int perm)
 	return -1;
 }
 	
-	
+void cut_string(char *s, int wanted_size)
+{
+	int actual_size = strlen(s);
+	if(actual_size > wanted_size)
+	{
+		s[wanted_size] = '\0';
+	}
+	return;
+}
 	
 
 	
