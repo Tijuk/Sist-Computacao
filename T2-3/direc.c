@@ -1,5 +1,6 @@
 #include "direc.h"
-#include "defines.h"
+#include "encode.c"
+
 typedef struct args_list{
 	char arg[MAXARG][MP];
 	int nargs;
@@ -31,7 +32,7 @@ int deletedirectory(char *path, int path_len, char* dirname, int dir_len);
 	// ----------- //
 
 	// ALL //
-int change_permissions(Info *a, char *path, int permission);
+int change_permissions(Info *a, char *path, int permission1,int permission2);
 int liststuff(char *pathname);
 	// --- //
 // ------- //
@@ -65,16 +66,12 @@ char* get_answer(Info *a, char* lpath)
 {
 	int n;
 	int ret;
-
-		printf("char code recebido %s",a->code);
-
 	int code = check_code(a->code);
 	char *s = get_code_REP(code);
 	char *answer = (char*)malloc(sizeof(char)*CMAX);
 	char help[MP];
 	sprintf(help,"%s,%s,%d",s,a->path,a->pathlen);
 	n = a->nrbytes;
-
 	if(code == DEF_RD) //read file
 	{
 		ret=file_manipulation(clienteID, code, a->path,a->payload, &n, a->offset);
@@ -154,19 +151,22 @@ char* get_answer(Info *a, char* lpath)
 	return NULL;
 }
 
-int change_permissions(Info *a, char *path, int permission)
+int change_permissions(Info *a, char *path, int perm1,int perm2)
 {
-	int owner = 0;
-	if(owner == clientID)
-	{
-		//setperm;
-		return 0;
-	}
-	else
-	{
-		a->offset = -1;
-		return -1;
-	}
+	int ret1,ret2,ret3;
+
+	ret1=setxattr(path,"user.client",&clienteID,1,0);
+	ret2=setxattr(path,"user.read_perm",&perm1,1,0);
+	ret3=setxattr(path,"user.write_perm",&perm2,1,0);
+/*
+	if(ret1 < 0)
+		printf("erro1\n");
+	if(ret1 < 0)
+		printf("erro2\n");
+	if(ret1 < 0)
+		printf("erro3\n");*/
+
+	return 1;
 }
 
 void get_decision(Info *a,char *cmdClient)
@@ -256,24 +256,7 @@ int createdirectory(char *path, int path_len, char* dirname, int dir_len)
 	dirname = get_file_name(dirname);
 	//printf("Creating: %s at %s\n",dirname,path);
 	status = mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	//Gravar no diretorio criado o id do cliente
-	/*char d1,codtemp1 = 0x1; //client
-	char d2,codtemp2 = 0x2; //permissao
-	int ret1,ret2,ret3,ret4;
-	ret1 = setxattr(dirname,"user.client",&codtemp1,1,0);
-	ret3 = setxattr(dirname,"user.permissao",&codtemp2,1,0);
-	if(ret1 < 0)
-		printf("erro1\n");
-	if(ret3 < 0)
-		printf("erro2\n");
-	ret2=getxattr(dirname,"user.client",&d1,1);
-	ret4=getxattr(dirname,"user.permissao",&d2,1);
-	if(ret4 < 0)
-		printf("erro3\n"); 	
-	if(ret2 < 0)
-		printf("erro4\n");
-	printf("Client id:%d\n",d1);
-	printf("Permissao:%d\n",d2);*/
+
 	chdir(aux_root_path);
 	if(status==0)
 	{
@@ -451,9 +434,6 @@ int check_code(char *code)
 	int i;
 	int cmp;
 	char codelist[7][7];
-
-	printf("char code recebido %s",code);
-
 	strcpy(codelist[0],"RD-REQ");
 	strcpy(codelist[1],"WR-REQ");
 	strcpy(codelist[2],"FI-REQ");
