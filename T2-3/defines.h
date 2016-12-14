@@ -10,6 +10,8 @@
 #define MP 300
 #define MPATH 100
 
+#define SPACE 32
+
 #define DEF_RD 0 //read file
 #define DEF_WR 1 //write file
 #define DEF_FI 2 //find info
@@ -17,6 +19,14 @@
 #define DEF_DR 4 //direc remove
 #define DEF_DL 5 //direc list all
 #define DEF_OL 6 //direc list directory
+#define DEF_CL 7 //change file perfimissions
+
+#define REMOVED 4
+#define READ 3
+#define WROTE 2
+#define CREATED 0
+#define INSUF_PERM -1
+#define FILE_ALREADY_EXISTS -2
 
 
 /*
