@@ -251,6 +251,10 @@ void decode(char *code)
 	{
 		solo_decode(decoded);
 	}
+	else
+	{
+		printf("\tWe are sorry. An unexpected error ocurred while listing your files\n");
+	}
 }
 char* getfilenames(char *s)
 {
