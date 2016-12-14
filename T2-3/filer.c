@@ -133,46 +133,33 @@ int write_file(Filer *file)
 
 int read_file(Filer *file)
 {
-	struct stat sb;
-	off_t len;
-	char *p;
-	int fd;
-	int form = 0;
-	int countbyter = 0;
-	int permission = check_permission(file->path,file->clientID);
+	int permission = check_permission(file->clientID, file->owner, file->read_perm);
 	if(permission == TRUE)
 	{
-		file->payload = (char*)malloc(sizeof(char)* (file->nrbytes + 1));
-		fd = open(file->path, O_RDONLY);
-		checa_erro(fd,"open");
-		checa_erro(fstat(fd,&sb),"fstat");
-		if(!S_ISREG (sb.st_mode))
+		FILE *read_arq;
+		int i=0;
+		struct stat sb;
+		char carac = 0;
+		char aux[CMAX];
+		read_arq = fopen(file->path, "r");
+		if(read_arq == NULL)
 		{
-			fprintf(stderr, "%s is not a file\n", file->path);
-			exit(1);
+			printf("Erro na abertura do arquivo < %s > para leitura\n",file->path);
+			return 1;
 		}
-		p = mmap(0, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-		if(p == MAP_FAILED)
+		fseek(read_arq, file->offset, SEEK_SET);
+		while(carac != EOF && (i+1) != file->nrbytes)
 		{
-			perror("mmap");
-			exit(1);
+			carac = fgetc(read_arq);
+			aux[i] = carac;
+			i++;
 		}
-		checa_erro(close(fd),"close");
-		for(len = 0; len < sb.st_size; len++)
-		{
-			if(countbyter == file->nrbytes)
-			{
-				form = 1;
-				break;
-			}
-			file->payload[len] = p[len + file->offset];
-			countbyter++;
-		}
-		checa_erro(munmap(p,sb.st_size),"munmap");
-		file->nrbytes = countbyter;
+		printf("--ok\n");
+		aux[i] = '\0';
+		file->nrbytes = i-1;
+		file->payload = scpy(aux);
 		return 0;
 	}
-	file->offset = -1;
 	return 1;
 }
 
