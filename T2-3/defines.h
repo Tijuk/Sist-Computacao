@@ -27,6 +27,8 @@
 #define CREATED 0
 #define INSUF_PERM -1
 #define FILE_ALREADY_EXISTS -2
+#define BUFFER_OVERLOAD -3
+#define THATS_NO_DIR -4
 
 
 /*

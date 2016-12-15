@@ -1,4 +1,5 @@
 #include "filer.h"
+#pragma once
 
 typedef struct file_manager_strt{
 	int clientID;
@@ -41,33 +42,31 @@ int file_manipulation(int client, int code,char *path,char *payload, int *nrbyte
 	char present_path[MP];
 	char aux[MP];
 	getcwd(present_path,MP*sizeof(char));
-
 	sprintf(aux,"%s/%s%s",present_path,FULL_ROOT,path);
 	file = fill_file(client,aux,payload,nrbytes,offset);
 	if(code == 0) // read
 	{
 		value = read_file(file);
-		payload = scpy(file->payload);
+		strcpy(payload,file->payload);
 	}
 	else if(code == 1) // write or create or delete
 	{
 		if(file->nrbytes == 0)
 		{
-			printf("Deletando arquivo: %s\n",file->path);
+			//printf("Deletando arquivo: %s\n",file->path);
 			value = delete_file(file);
 		}
 		else if(strlen(file->payload)==0)
 		{
-			printf("Criando arquivo: %s\n",file->path);
+			//printf("Criando arquivo: %s\n",file->path);
 			value = create_file(file);
 		}
 		else
 		{
-			printf("Escrevendo no arquivo: %s\n", file->path);
+			//printf("Escrevendo no arquivo: %s\n", file->path);
 			value = write_file(file);		
 		}
 	}
-	if(value == 1) printf("Not enough permissions bro\n");
 	*nrbytes = file->nrbytes;
 	return value;
 }
@@ -77,75 +76,89 @@ int create_file(Filer *file)
 	int fd;
 	int permission;
 	char s = 32;
-	permission = check_permission(file->path,file->clientID);
-
+	//permission = check_permission(file->path,file->clientID);
+	permission = TRUE;
 	if(permission == TRUE)
 	{
 		fd = open(file->path, O_RDWR|O_CREAT,0666);
 		if(fd < 0)
 		{
 			printf("Erro abertura do arquivo\n");
-			return 1;
+			return FILE_ALREADY_EXISTS;
 		}
 		write(fd,&s, sizeof(char));
-		return 0;
+		return CREATED;
 	}
-	file->offset = -1;
-	return 1;
+	return INSUF_PERM;
 }
 
 int delete_file(Filer *file)
 {
 	int permission;
-	permission = check_permission(file->path,file->clientID);
-
+	//permission = check_permission(file->path,file->clientID);
+	permission = TRUE;
 	if(permission == TRUE)
 	{
-		remove(file->path);
-		return 0;
+		if(remove(file->path)==0)
+		{
+			return REMOVED;
+		}
+		else
+		{
+			return -2;
+		}
 	}
-	file->offset = -1;
-	return 1;
+	return INSUF_PERM;
 }
 
 int write_file(Filer *file)
 {
-	int permission = check_permission(file->path,file->clientID);
+	//int permission = check_permission(file->path,file->clientID);
+	int permission = TRUE;
 	if(permission == TRUE)
 	{
+		int size;
 		char* cutted_payload = scpy(file->payload);
 		FILE* arq;
 		cut_string(cutted_payload, file->nrbytes);
 		arq = fopen(file->path,"r+");
 		if(arq==NULL)
 		{
-			printf("Fail to open file <%s> for writing\n", file->path);
+			printf("File < %s > doesnt exist. Creating it.\n",file->path);
+			int ret;
+			ret = create_file(file);
+			if(ret != 0) return ret;
+			return write_file(file);
 		}
 		fseek(arq,file->offset,SEEK_SET);
 		fprintf(arq,"%s",cutted_payload);
 		rewind(arq);
 		fclose(arq);
-		return 0;
+		size = strlen(file->payload);
+		if(file->nrbytes > size) file->nrbytes = size;
+		return WROTE;
 	}
-	file->offset = -1;
-	return 1;
+	return INSUF_PERM;
 }
 
 int read_file(Filer *file)
 {
-	int permission = check_permission(file->clientID, file->owner, file->read_perm);
+	//int permission = check_permission(file->clientID, file->owner, file->read_perm);
+	int permission = TRUE;
 	if(permission == TRUE)
 	{
 		FILE *read_arq;
 		int i=0;
 		struct stat sb;
 		char carac = 0;
-		char aux[CMAX];
+		char aux[CMAX] = "";
 		read_arq = fopen(file->path, "r");
 		if(read_arq == NULL)
 		{
-			printf("Erro na abertura do arquivo < %s > para leitura\n",file->path);
-			return 1;
+			printf("<%s> already exists\n", file->path);
+			file->payload = scpy(aux);
+			file->nrbytes = 0;
+			return FILE_ALREADY_EXISTS;
 		}
 		fseek(read_arq, file->offset, SEEK_SET);
 		while(carac != EOF && (i+1) != file->nrbytes)
@@ -153,14 +166,21 @@ int read_file(Filer *file)
 			carac = fgetc(read_arq);
 			aux[i] = carac;
 			i++;
+			if(i == CMAX)
+			{
+				printf("String to long. Buffer Overload\n");
+				rewind(read_arq);
+				fclose(read_arq);
+				return BUFFER_OVERLOAD;
+			}	
 		}
-		printf("--ok\n");
+		i--;
 		aux[i] = '\0';
-		file->nrbytes = i-1;
+		file->nrbytes = i;
 		file->payload = scpy(aux);
-		return 0;
+		return READ;
 	}
-	return 1;
+	return INSUF_PERM;
 }
 
 void checa_erro(int erro, char *s)
@@ -322,3 +342,4 @@ read_perm	user	owner
 	
 	
 	
+

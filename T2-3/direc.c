@@ -1,5 +1,6 @@
 #include "direc.h"
 #include "encode.c"
+#pragma once
 
 typedef struct args_list{
 	char arg[MAXARG][MP];
@@ -24,7 +25,7 @@ typedef struct info{
 extern int alphasort();
 static int clienteID;
 static char aux_root_path[MP];
-static int RET_STAT = 0;
+static int RET_STAT;
 
 // ACTIONS //
 	// DIRECTORIES //
@@ -78,17 +79,18 @@ char* get_answer(Info *a, char* lpath)
 	char pload[CMAX];
 	sprintf(help,"%s,%s,%d",s,a->path,a->pathlen);
 	n = a->nrbytes;
+	RET_STAT = 0;
 	if(code == DEF_RD) //read file
 	{
 		ret=file_manipulation(clienteID, code, a->path,pload, &n, a->offset);
 		a->nrbytes = n;
 		a->payload = scpy(pload);
-		printf("Direc: payload: %s\n", a->payload);
 		sprintf(answer,"%s,%s,%d,%d",help,a->payload, a->nrbytes, a->offset);
 		if(ret == 1)
 		{
 			printf("Error reading file\n");	
 		}
+		RET_STAT = ret;
 		return answer;
 	}
 	else if(code == DEF_WR) //write on file
@@ -100,6 +102,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error writing on file\n");
 		}
+		RET_STAT = ret;
 		return answer;	
 	}
 	else if(code == DEF_FI) //find information on file
@@ -109,6 +112,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error finding information on file\n");
 		}
+		RET_STAT = ret;
 		return answer;
 	}
 	else if(code == DEF_DC) //create directory
@@ -121,6 +125,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error creating directory\n");
 		}
+		RET_STAT = ret;
 		return answer;
 	}
 	else if(code == DEF_DR) //remove directory
@@ -133,6 +138,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error deleting directory\n");
 		}
+		RET_STAT = ret;
 		return answer;
 	}
 	else if(code == DEF_DL) //list directory
@@ -144,6 +150,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error listing director(y/ies)\n");
 		}
+		RET_STAT = ret;
 		return answer;
 	}
 	else if(code == DEF_OL) //One-Dir list
@@ -155,6 +162,7 @@ char* get_answer(Info *a, char* lpath)
 		{
 			printf("Error listing one directory\n");
 		}
+		RET_STAT = ret;
 		return answer;	
 	}
 	printf("Invalid Code: %s\n", s);
@@ -268,14 +276,8 @@ int createdirectory(char *path, int path_len, char* dirname, int dir_len)
 	status = mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
 	chdir(aux_root_path);
-	if(status==0)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}	
+	if(status == 0)return CREATED;
+	return THATS_NO_DIR;
 
 }
 
@@ -286,16 +288,10 @@ int deletedirectory(char *path, int path_len, char* dirname, int dir_len)
 	int status;
 	dirn = get_file_name(dirname);	
 	chdir(path);
-	remove_directory(dirn);
-	printf("%s was deleted!!\n", dirn);
-	if(status==0)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
+	status = remove_directory(dirn);
+	if(status == 0)return REMOVED;
+	return THATS_NO_DIR;
+	
 }
 int remove_directory(const char *path)
 {
@@ -516,13 +512,13 @@ char* get_code_REP(int code)
 	char *s;
 	char codes[7][8];
 	s = (char*)malloc(sizeof(char)*8);
-	strcpy(codes[DEF_RD],"RD_REP");
-	strcpy(codes[DEF_WR],"WR_REP");
-	strcpy(codes[DEF_FI],"FI_REP");
-	strcpy(codes[DEF_DC],"DC_REP");
-	strcpy(codes[DEF_DR],"DR_REP");
-	strcpy(codes[DEF_DL],"DL_REP");
-	strcpy(codes[DEF_OL],"OL_REP");
+	strcpy(codes[DEF_RD],"RD-REP");
+	strcpy(codes[DEF_WR],"WR-REP");
+	strcpy(codes[DEF_FI],"FI-REP");
+	strcpy(codes[DEF_DC],"DC-REP");
+	strcpy(codes[DEF_DR],"DR-REP");
+	strcpy(codes[DEF_DL],"DL-REP");
+	strcpy(codes[DEF_OL],"OL-REP");
 	strcpy(s,codes[code]);
 	return s;
 }
@@ -532,3 +528,4 @@ void cat_stat(char* exec)
 	sprintf(temp, "%d,%s", RET_STAT, exec);
 	strcpy(exec, temp);
 }
+

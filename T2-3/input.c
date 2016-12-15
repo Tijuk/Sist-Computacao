@@ -1,4 +1,5 @@
 #include "input.h"
+#pragma once
 
 #define OLDCLIENT 1
 #define NEWCLIENT -1
@@ -361,8 +362,8 @@ void show_man(char *cmd)
 	printf("Comando: %s\n", cmd);
 	if (mode == MKDIR)
 	{
-		printf("\tCriar um diretorio com esse nome no diretorio atual\n");
-		printf("\t\tRecebe string com nome de um diretorio\n");
+		printf("\tCria um diretorio com esse nome no diretorio atual\n");
+		printf("\t\tRecebe string com nome do diretorio criado\n");
 	}
 	else if (mode == RMDIR)
 	{
@@ -495,9 +496,3 @@ void tabela_permissoes(void)
 	printf("\t\t\tUsuario Apenas:\t1\n");
 	printf("\t\t\tNinguem:\t3\n");
 }
-	
-	
-	
-	
-	
-	

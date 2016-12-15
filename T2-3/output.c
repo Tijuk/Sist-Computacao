@@ -1,4 +1,5 @@
 #include "output.h"
+#pragma once
 
 #define OK 0
 #define NBGREATER 1
@@ -36,6 +37,7 @@ void sucess_message(int stat, int mode, char* output)
 	{
 		int nb;
 		w = get_nword(6,output);
+		nb = atoi(w);
 		if(mode == DEF_RD)
 		{
 			printf("\tYou read < %d > bytes from < %s > file\n",nb,path);
@@ -102,7 +104,6 @@ void exibe_output(char *output)
 	char *word2 = get_nword(2, output);
 	state = atoi(word1);
 	mode = get_mode_output(word2);
-	printf("%s\n",word2);
 	message(mode, state, output);
 }
 
@@ -131,10 +132,10 @@ char* get_nword(int word_number, char *output)
 
 void message(int mode, int state,char* output)
 {
-	printf("mode\t%s\n",output);
+	//printf("mode\t%s\n",output);
 	if(state >= CREATED)
 	{
-		printf("state %d\tmode %d\n",state,mode);
+		//printf("state %d\tmode %d\n",state,mode);
 		sucess_message(state,mode, output);
 	}
 	else
@@ -147,7 +148,15 @@ void message(int mode, int state,char* output)
 		}
 		else if(state == FILE_ALREADY_EXISTS)
 		{
-			printf("\tFile already exists.\n");
+			printf("\t\tFile couldnt be opened.\n");
+		}
+		else if(state == BUFFER_OVERLOAD)
+		{
+			printf("\t\tInput String is too long. Max byte size = 3000\n");
+		}
+		else
+		{
+			printf("\t\tDirectory already exists or thats not a directory\n");
 		}
 	}
 }
@@ -176,7 +185,7 @@ void erro_de_permissao(void)
 
 void failure(int mode, char* path)
 {
-	printf("\t");
+	printf("\t==[ ");
 	if(mode == DEF_RD)
 	{
 		printf("Failed to read file < %s >", path);
@@ -209,7 +218,7 @@ void failure(int mode, char* path)
 	{
 		printf("Failed to change permissions from path < %s >", path);
 	}
-	printf("\tCheck [help] and [man] for more information\n");
+	printf(" ]==\n\t\tCheck [help] and [man] for more information\n");
 }
 
 void rem_barra(char *s)

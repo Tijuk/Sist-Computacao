@@ -1,4 +1,5 @@
 #include "encode.h"
+#pragma once
 
 /* ------------------------------------------------- *\
 ENCODE
@@ -393,3 +394,4 @@ void solo_decode(A* decode)
 	}
 	printf("%s\n",decode->filenames[i]);
 }
+
