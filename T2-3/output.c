@@ -24,7 +24,9 @@ void sucess_message(int stat, int mode, char* output);
 
 int check_decode(void)
 {
-	return need_decode;
+	int value = need_decode;
+	need_decode = 0;
+	return value;
 }
 
 void sucess_message(int stat, int mode, char* output)
