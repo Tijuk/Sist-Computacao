@@ -75,12 +75,15 @@ char* get_answer(Info *a, char* lpath)
 	char *s = get_code_REP(code);
 	char *answer = (char*)malloc(sizeof(char)*CMAX);
 	char help[MP];
+	char pload[CMAX];
 	sprintf(help,"%s,%s,%d",s,a->path,a->pathlen);
 	n = a->nrbytes;
 	if(code == DEF_RD) //read file
 	{
-		ret=file_manipulation(clienteID, code, a->path,a->payload, &n, a->offset);
+		ret=file_manipulation(clienteID, code, a->path,pload, &n, a->offset);
 		a->nrbytes = n;
+		a->payload = scpy(pload);
+		printf("Direc: payload: %s\n", a->payload);
 		sprintf(answer,"%s,%s,%d,%d",help,a->payload, a->nrbytes, a->offset);
 		if(ret == 1)
 		{
